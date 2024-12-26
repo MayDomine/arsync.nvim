@@ -27,7 +27,7 @@ M.CONFIG_SCHEMA = {
   
   -- sftp 特有配置项
   sftp = {
-    timeout = { type = "number", default = 30 }  -- 连接超时时间
+    timeout = { type = "number", default = 10 }  -- 连接超时时间
   }
 }
 

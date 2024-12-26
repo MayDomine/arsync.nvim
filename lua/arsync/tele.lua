@@ -12,7 +12,14 @@ local M = {}
 local function read_json_file(file_path)
   local file = io.open(file_path, "r")
   if not file then
-    print("Failed to open file: " .. file_path)
+    vim.notify("Failed to open file: " .. file_path .. ". Create global conf...")
+    file = io.open(file_path, "w")
+    if file then
+      file:write("{}")
+      file:close()
+    else
+      vim.notify("Failed to create file: " .. file_path, vim.log.levels.ERROR)
+    end
     return {}
   end
   local content = file:read "*all"
