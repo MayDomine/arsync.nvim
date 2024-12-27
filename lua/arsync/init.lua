@@ -151,11 +151,9 @@ local function arsync(direction, single_file)
     return
   end
 
-  local backend_info = get_backend_info(config)
   if vim.g.arsync_disable then
     return
   end
-  start_animation(string.format("[%s] Transferring...", backend_info))
 
   -- 验证配置
   config = validate_config(config)
@@ -163,11 +161,13 @@ local function arsync(direction, single_file)
 
   -- 获取传输命令
   local file_path = single_file and vim.fn.expand('%:p'):sub(#config.local_path + 2) or ""
-  if file_path == "" or vim.fn.isdirectory(conf.local_path .. "/" .. file_path) == 1 then
+  if file_path == "" or vim.fn.isdirectory(config.local_path .. "/" .. file_path) == 1 then
       config.backend = "rsync"
       backend = get_backend(config)
   end
 
+  local backend_info = get_backend_info(config)
+  start_animation(string.format("[%s] Transferring...", backend_info))
   local cmd = backend.transfer(direction, config, file_path)
   
   -- 如果后端返回空表（sftp），说明传输已经在后台进行
@@ -191,9 +191,9 @@ local function arsync(direction, single_file)
   vim.g.rsync_cmd = cmd
   vim.fn.jobstart(cmd, {
     on_stdout = function(_, data)
-      if data and #data > 1 then
-        update_icon(string.format("[%s]\n%s", backend_info, table.concat(data, "\n")))
-      end
+      -- if data and #data > 1 then
+      --   update_icon(string.format("[%s]\n%s", backend_info, table.concat(data, "\n")))
+      -- end
     end,
     on_stderr = function(_, data)
       if data and #data > 1 then
