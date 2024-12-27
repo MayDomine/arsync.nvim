@@ -4,10 +4,6 @@ local M = setmetatable({}, { __index = backend.Backend })
 
 function M.transfer(direction, conf, rel_filepath)
   -- Check if rel_filepath is a directory or empty
-  if rel_filepath == "" or vim.fn.isdirectory(conf.local_path .. "/" .. rel_filepath) == 1 then
-    -- Use rsync backend for directories or empty paths
-    return rsync_backend.transfer(direction, conf, rel_filepath)
-  end
 
   -- Call Python function for SFTP transfer
   res = vim.fn.ArsyncSFTPTransfer(direction, conf, rel_filepath)

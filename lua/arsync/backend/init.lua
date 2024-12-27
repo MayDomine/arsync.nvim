@@ -40,7 +40,8 @@ M.Backend = {
   -- 清理资源
   cleanup = function() end,
   -- 获取所需配置项
-  get_required_config = function() end
+  get_required_config = function() end,
+  toggle = function(disable) end
 }
 
 return M

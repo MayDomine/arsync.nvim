@@ -22,7 +22,7 @@ local FRAMES = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "
 local frame_index = 0
 vim.g.timer_id = nil
 vim.g.notify_running = false
-
+vim.g.arsync_disable = false
 -- 更新图标的函数
 local function update_icon(msg)
   if not vim.g.notify_running then
@@ -42,6 +42,11 @@ local function update_icon(msg)
     animate = true,
     icon = current_frame
   })
+end
+
+local function toggle(disable)
+  assert(disable == nil or disable == true or disable == false, "disable must be nil, true, or false")
+  vim.g.arsync_disable = disable ~= nil and disable or not vim.g.arsync_disable
 end
 
 -- 开始动画
@@ -147,6 +152,9 @@ local function arsync(direction, single_file)
   end
 
   local backend_info = get_backend_info(config)
+  if vim.g.arsync_disable then
+    return
+  end
   start_animation(string.format("[%s] Transferring...", backend_info))
 
   -- 验证配置
@@ -155,6 +163,11 @@ local function arsync(direction, single_file)
 
   -- 获取传输命令
   local file_path = single_file and vim.fn.expand('%:p'):sub(#config.local_path + 2) or ""
+  if file_path == "" or vim.fn.isdirectory(conf.local_path .. "/" .. file_path) == 1 then
+      config.backend = "rsync"
+      backend = get_backend(config)
+  end
+
   local cmd = backend.transfer(direction, config, file_path)
   
   -- 如果后端返回空表（sftp），说明传输已经在后台进行
@@ -253,14 +266,22 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.notify(vim.inspect(config), vim.log.levels.INFO, { title = NOTIFY_TITLE })
   end, { desc = "Show current configuration" })
 
-  -- 创建用户命令
+  vim.api.nvim_create_user_command("ARSyncToggle", function(opts)
+    toggle()
+  end, { desc = "Sync Toggle" })
+  vim.api.nvim_create_user_command("ARSyncEnable", function(opts)
+    toggle(false)
+  end, { desc = "Sync Enable" })
+  vim.api.nvim_create_user_command("ARSyncDisable", function(opts)
+    toggle(true)
+  end, { desc = "Sync Disable" })
   vim.api.nvim_create_user_command("ARSync", function(opts)
     arsync('up')
   end, { desc = "Sync current file to remote" })
 
   vim.api.nvim_create_user_command("ARSyncProj", function(opts)
     arsync('up', false)
-  end, { desc = "Sync current file to remote" })
+  end, { desc = "Sync current Proj to remote" })
 
   vim.api.nvim_create_user_command("ARSyncDown", function(opts)
     arsync('down')
@@ -268,7 +289,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
   vim.api.nvim_create_user_command("ARSyncDownProj", function(opts)
     arsync('down', false)
-  end, { desc = "Sync current file from remote" })
+  end, { desc = "Sync current proj from remote" })
 
   vim.api.nvim_create_user_command("ARSyncDelete", function(opts)
     arsync('upDelete')
