@@ -301,7 +301,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.notify("Delete global configuration:\n" .. conf_file, vim.log.levels.INFO, { title = NOTIFY_ID })
   end, { nargs = 0 })
 
-  vim.keymap.set("n", "<leader>ar", "<cmd>ARSyncUpProj<CR>", { desc = "ARSyncUpProj To Remote" })
+  vim.keymap.set("n", "<leader>ar", "<cmd>ARSyncProj<CR>", { desc = "ARSyncUpProj To Remote" })
   vim.keymap.set("n", "<leader>as", "<cmd>ARSyncShow<CR>", { desc = "ARSyncShow" })
   vim.keymap.set("n", "<leader>ad", "<cmd>ARSyncDownProj<CR>", { desc = "ARSyncDownProj From Remote" })
   vim.keymap.set("n", "<leader>ac", "<cmd>ARCreate<CR>", { desc = "ARSyncUp Config Create" })
