@@ -6,7 +6,7 @@ NOTIFY_ID = "arsync"
 
 
 def nvim_notify(
-    nvim, message, level="info", title="arsync", id=NOTIFY_ID, stop_ani=False
+    nvim, message, level="info", title="arsync:ftp", id=NOTIFY_ID, stop_ani=False
 ):
     if stop_ani:
         nvim.async_call(
@@ -77,7 +77,7 @@ class SFTPClient:
         except Exception as e:
             error_message = str(e).replace("'", "\\'")
             nvim_notify(
-                self.nvim, f"Transfer failed: {error_message}", "error", stop_ani=True
+                self.nvim, f"Transfer failed: {error_message}", "error", stop_ani=True, id=None
             )
             try:
                 self.cleanup()
@@ -87,7 +87,7 @@ class SFTPClient:
                     self.nvim,
                     "Rebuild connection failed, disable sftp now...",
                     "error",
-                    stop_ani=True,
+                    id = None
                 )
                 self.nvim.async_call(
                     lambda: self.nvim.command("ARSyncDisable")
