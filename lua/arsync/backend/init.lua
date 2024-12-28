@@ -21,7 +21,7 @@ M.CONFIG_SCHEMA = {
     -- 可选配置（带默认值）
     remote_or_local = { type = "string", default = "remote" },  -- 传输模式
     local_options = { type = "string", default = "-var" },      -- rsync 本地选项
-    remote_options = { type = "string", default = "-vazre" },   -- rsync 远程选项
+    remote_options = { type = "string", default = "-varz" },   -- rsync 远程选项
     rsync_flags = { type = "table", default = {"--max-size=100m"} }, -- rsync 额外标志
   },
   
