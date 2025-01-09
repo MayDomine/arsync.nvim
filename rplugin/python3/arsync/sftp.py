@@ -47,6 +47,7 @@ class SFTPClient:
                         config.get("identity_file", "~/.ssh/id_rsa")
                     )
                 },
+                "connect_timeout": 5,
             }
 
             # 连接到远程主机
@@ -66,10 +67,11 @@ class SFTPClient:
             remote_path = os.path.join(self._config["remote_path"], rel_path)
 
             if direction == "up":
+                self._connection.run(f'mkdir -p {os.path.dirname(remote_path)}')
                 self._connection.put(local_path, remote_path)
             else:
                 self._connection.get(remote_path, local_path)
-
+            rel_path = rel_path.replace("\\", "/")
             nvim_notify(
                 self.nvim, f"Transfer completed: {rel_path}", "info", stop_ani=True
             )
