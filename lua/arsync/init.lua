@@ -245,18 +245,14 @@ M.setup = function()
 
   -- 设置自动命令
 
-vim.api.nvim_create_autocmd("VimEnter", {
+vim.api.nvim_create_autocmd({ "BufWritePost", "FileWritePost" }, {
   callback = function()
     local config = conf.load_conf()
     if config then
-      vim.api.nvim_create_autocmd({ "BufWritePost", "FileWritePost" }, {
-        callback = function()
-          local auto_sync_up = config.auto_sync_up ~= nil and config.auto_sync_up ~= 0
-          if auto_sync_up then
-            arsync('up')
-          end
-        end,
-      })
+      local auto_sync_up = config.auto_sync_up and config.auto_sync_up ~= 0
+      if auto_sync_up then
+        arsync('up')
+      end
     end
   end,
 })
