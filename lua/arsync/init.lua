@@ -4,7 +4,6 @@
 -- License: MIT
 
 local Backend = require("arsync.backend.init")
-local notify = require("notify")
 local conf = require("arsync.conf")
 
 local M = {}

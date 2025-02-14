@@ -1,8 +1,6 @@
 local backend = require("arsync.backend.init")
-local notify = require("notify")
 
 local M = setmetatable({}, { __index = backend.Backend })
-local NOTIFY_ID = "arsync"
 
 function M.init(conf)
   if not vim.fn.executable('rsync') then
