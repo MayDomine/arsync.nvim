@@ -159,7 +159,11 @@ local function arsync(direction, single_file)
   local backend = get_backend(config)
 
   -- 获取传输命令
-  local file_path = single_file and vim.fn.expand('%:p'):sub(#config.local_path + 2) or ""
+  local curr_path = vim.fn.expand('%:p')
+  if not curr_path:find('^' .. vim.pesc(config.local_path)) then
+    return
+  end
+  local file_path = single_file and curr_path:sub(#config.local_path + 2) or ""
   if file_path == "" or vim.fn.isdirectory(config.local_path .. "/" .. file_path) == 1 then
       config.backend = "rsync"
       backend = get_backend(config)
