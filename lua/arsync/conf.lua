@@ -21,6 +21,7 @@ local function read_conf_file(file_path)
   if not file then
     file = io.open(file_path, "w")
     file:close()
+    error("Cannot find file: " .. file_path)
     return {}
   end
   local content = file:read "*a"
