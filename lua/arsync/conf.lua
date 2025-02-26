@@ -5,6 +5,9 @@ M.global_conf_file = vim.fn.stdpath "data" .. "/arsync/global_conf.json"
 M.replace_key = { "remote_host", "remote_port", "remote_path", "local_path" }
 M.init_key = { "remote_host", "remote_port", "remote_path", "local_path", "rsync_flags", "auto_sync_up" }
 
+if not vim.loop.fs_stat(vim.fn.fnamemodify(M.global_conf_file, ":h")) then
+  vim.fn.mkdir(vim.fn.fnamemodify(M.global_conf_file, ":h"), "p")
+end
 -- 读取 JSON 配置文件
 local function write_conf_file(file_path, data)
   local file = io.open(file_path, "w")

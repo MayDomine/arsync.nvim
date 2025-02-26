@@ -301,6 +301,7 @@ vim.api.nvim_create_autocmd({ "BufWritePost", "FileWritePost" }, {
   end, { nargs = 0 })
 
   vim.keymap.set("n", "<leader>ar", "<cmd>ARSyncProj<CR>", { desc = "ARSyncUpProj To Remote" })
+  vim.keymap.set("n", "<leader>aw", "<cmd>ARSync<CR>", { desc = "ARSyncUpProj To Remote" })
   vim.keymap.set("n", "<leader>as", "<cmd>ARSyncShow<CR>", { desc = "ARSyncShow" })
   vim.keymap.set("n", "<leader>ad", "<cmd>ARSyncDownProj<CR>", { desc = "ARSyncDownProj From Remote" })
   vim.keymap.set("n", "<leader>ac", "<cmd>ARCreate<CR>", { desc = "ARSyncUp Config Create" })
