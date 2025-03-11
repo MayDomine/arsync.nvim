@@ -47,7 +47,7 @@ class SFTPClient:
                         config.get("identity_file", "~/.ssh/id_rsa")
                     )
                 },
-                "connect_timeout": 10,
+                "connect_timeout": 5,
             }
 
             # 连接到远程主机

@@ -137,6 +137,16 @@ local function get_backend_info(config)
   return info
 end
 
+local function cleanup()
+  local config = conf.load_conf()
+  if not config then
+    return
+  end
+
+  local backend = get_backend(config)
+  backend.cleanup()
+end
+
 -- 实现 arsync 函数
 local function arsync(direction, single_file)
   single_file = single_file == nil and true or single_file
@@ -229,6 +239,7 @@ end
 
 -- 导出 arsync 相关函数
 M.arsync = arsync
+M.cleanup = cleanup
 M.arsync_up = function() arsync('up') end
 M.arsync_down = function() arsync('down') end
 M.arsync_up_delete = function() arsync('upDelete') end
@@ -293,6 +304,10 @@ vim.api.nvim_create_autocmd({ "BufWritePost", "FileWritePost" }, {
   vim.api.nvim_create_user_command("ARSyncDelete", function(opts)
     arsync('upDelete')
   end, { desc = "Sync and delete current file" })
+
+  vim.api.nvim_create_user_command("ARSyncCleanSftp", function(opts)
+    M.cleanup()
+  end, { nargs = 0 })
 
   vim.api.nvim_create_user_command("ARClear", function(opts)
     local conf_file = vim.fn.stdpath "data" .. "/arsync/global_conf.json"
