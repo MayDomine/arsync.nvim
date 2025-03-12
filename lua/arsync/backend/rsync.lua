@@ -10,7 +10,13 @@ end
 
 function M.transfer(direction, conf, rel_filepath)
   local cmd = {"rsync"}
-  
+  local ignore_path = conf.ignore_path:gsub("^%s*%[%s*", "")  -- Remove leading "["
+  ignore_path = ignore_path:gsub("%s*%]%s*$", "") -- Remove trailing "]"
+  ignore_path = vim.split(ignore_path, ",")
+  for _, path in ipairs(ignore_path) do
+    table.insert(cmd, "--exclude")
+    table.insert(cmd, path)
+  end
   if conf.remote_or_local == "remote" then
     local ssh_cmd = conf.remote_port ~= 0 and ("ssh -p " .. conf.remote_port) or "ssh"
     local remote_prefix = conf.remote_host
@@ -57,6 +63,7 @@ function M.get_required_config()
     "remote_path",
     "local_path",
     "remote_or_local",
+    "ignore_path",
     "remote_options",
     "local_options"
   }
