@@ -26,4 +26,3 @@ class Arsync:
         if self.sftp_client:
             self.sftp_client.cleanup()
             self.sftp_client = None
-

@@ -61,7 +61,6 @@ class SFTPClient:
             return False
 
     def transfer(self, direction: str, rel_path: str) -> bool:
-
         try:
             local_path = os.path.join(self._config["local_path"], rel_path)
             remote_path = os.path.join(self._config["remote_path"], rel_path)
@@ -79,7 +78,11 @@ class SFTPClient:
         except Exception as e:
             error_message = str(e).replace("'", "\\'")
             nvim_notify(
-                self.nvim, f"Transfer failed: {error_message}", "error", stop_ani=True, id=None
+                self.nvim,
+                f"Transfer failed: {error_message}",
+                "error",
+                stop_ani=True,
+                id=None,
             )
             try:
                 self.cleanup()
@@ -89,15 +92,11 @@ class SFTPClient:
                     self.nvim,
                     "Rebuild connection failed, disable sftp now...",
                     "error",
-                    id = None
+                    id=None,
                 )
-                self.nvim.async_call(
-                    lambda: self.nvim.command("ARSyncDisable")
-                )
-                
+                self.nvim.async_call(lambda: self.nvim.command("ARSyncDisable"))
 
             return False
-
 
     def cleanup(self):
         if self._connection:
