@@ -13,6 +13,7 @@ function M.transfer(direction, conf, rel_filepath)
   local ignore_path = conf.ignore_path:gsub("^%s*%[%s*", "")  -- Remove leading "["
   ignore_path = ignore_path:gsub("%s*%]%s*$", "") -- Remove trailing "]"
   ignore_path = vim.split(ignore_path, ",")
+  ignore_path = vim.tbl_map(function(path) return path:gsub("^%s*\"(.-)\"%s*$", "%1") end, ignore_path)
   for _, path in ipairs(ignore_path) do
     table.insert(cmd, "--exclude")
     table.insert(cmd, path)
