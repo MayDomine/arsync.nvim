@@ -53,7 +53,7 @@ class SFTPClient:
             # 连接到远程主机
             self._connection = Connection(**connect_params)
 
-            nvim_notify(self.nvim, "SFTP connection created", "info")
+            nvim_notify(self.nvim, "SFTP connection created", "info", id = None)
             return True
         except Exception as e:
             error_message = str(e).replace("'", "\\'")
@@ -71,8 +71,9 @@ class SFTPClient:
             else:
                 self._connection.get(remote_path, local_path)
             rel_path = rel_path.replace("\\", "/")
+            _msg = "Download" if direction == "down" else "Transfer"
             nvim_notify(
-                self.nvim, f"Transfer completed: {rel_path}", "info", stop_ani=True
+                self.nvim, f"{_msg} completed: {rel_path}", "info", stop_ani=True
             )
             return True
         except Exception as e:
