@@ -10,12 +10,15 @@ end
 
 function M.transfer(direction, conf, rel_filepath)
 	local cmd = { "rsync" }
-	local ignore_path = conf.ignore_path:gsub("^%s*%[%s*", "") -- Remove leading "["
-	ignore_path = ignore_path:gsub("%s*%]%s*$", "") -- Remove trailing "]"
-	ignore_path = vim.split(ignore_path, ",")
-	ignore_path = vim.tbl_map(function(path)
-		return path:gsub('^%s*"(.-)"%s*$', "%1")
-	end, ignore_path)
+  local ignore_path = {}
+  if conf.ignore_path then
+    ignore_path = conf.ignore_path:gsub("^%s*%[%s*", "") -- Remove leading "["
+    ignore_path = ignore_path:gsub("%s*%]%s*$", "") -- Remove trailing "]"
+    ignore_path = vim.split(ignore_path, ",")
+    ignore_path = vim.tbl_map(function(path)
+      return path:gsub('^%s*"(.-)"%s*$', "%1")
+    end, ignore_path)
+  end
 	for _, path in ipairs(ignore_path) do
 		table.insert(cmd, "--exclude")
 		table.insert(cmd, path)
