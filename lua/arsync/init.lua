@@ -283,10 +283,6 @@ M.setup = function()
 		arsync("down", false)
 	end, { desc = "Sync current proj from remote" })
 
-	vim.api.nvim_create_user_command("ARSyncDelete", function(opts)
-		arsync("upDelete")
-	end, { desc = "Sync and delete current file" })
-
 	vim.api.nvim_create_user_command("ARSyncCleanSftp", function(opts)
 		M.cleanup()
 	end, { nargs = 0 })
