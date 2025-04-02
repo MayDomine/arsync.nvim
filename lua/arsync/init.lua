@@ -113,7 +113,7 @@ end
 
 local function get_backend_info(config)
 	local backend_type = config.backend or "rsync"
-	local info = backend_type .. ": "
+	local info = backend_type .. ":"
 	if backend_type == "rsync" then
 		local remote_prefix = config.remote_user and (config.remote_user .. "@" .. config.remote_host)
 			or config.remote_host
@@ -165,7 +165,8 @@ local function arsync(direction, single_file)
 	end
 
 	local backend_info = get_backend_info(config)
-	start_animation(string.format("[%s] Transferring...", backend_info))
+  local msg_direction = direction == "down" and "Downloading" or "Uploading"
+	start_animation(string.format("[%s] %s...", backend_info, msg_direction))
 	local cmd = backend.transfer(direction, config, file_path)
 
 	if type(cmd) == "table" and #cmd == 0 then
@@ -204,8 +205,9 @@ local function arsync(direction, single_file)
 		end,
 		on_exit = function(_, code)
 			stop_animation()
-			local msg = code == 0 and string.format("[%s] Transfer completed successfully", backend_info)
-				or string.format("[%s] Transfer failed with code: %d", backend_info, code)
+      local msg_direction = direction == "down" and "Download" or "Upload"
+			local msg = code == 0 and string.format("[%s] %s completed successfully", backend_info, msg_direction)
+				or string.format("[%s] %s failed with code: %d", backend_info, msg_direction, code)
 
 			current_notify = vim.notify(msg, code == 0 and "info" or "error", {
 				title = NOTIFY_TITLE,

@@ -6,7 +6,7 @@ NOTIFY_ID = "arsync"
 
 
 def nvim_notify(
-    nvim, message, level="info", title="arsync:ftp", id=NOTIFY_ID, stop_ani=False
+    nvim, message, level="info", title="arsync", id=NOTIFY_ID, stop_ani=False
 ):
     if stop_ani:
         nvim.async_call(

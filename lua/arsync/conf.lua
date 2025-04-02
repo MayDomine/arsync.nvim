@@ -79,30 +79,32 @@ function M.load_conf()
 	file:close()
 
 	local local_conf = parse_arsync_config(content)
-	local local_hash = generate_hash(local_conf)
-	local global_conf = read_conf_file(M.global_conf_file)
-
-	-- Check if the configuration exists in the global configuration
-	for i, entry in ipairs(global_conf) do
-		local entry_hash = generate_hash(entry)
-		if entry_hash == local_hash then
-			table.remove(global_conf, i)
-		end
-	end
-
-	-- If not found or hash doesn't match, update the global configuration
-	local_conf.hash = local_hash
-	table.insert(global_conf, local_conf)
-
-	-- Write the updated global configuration back to the file
-	local global_file = io.open(M.global_conf_file, "w")
-	if global_file then
-		global_file:write(vim.json.encode(global_conf))
-		global_file:close()
-	end
-
+  M.write_global_conf(local_conf)
 	return local_conf
 end
+
+function M.write_global_conf(conf_dict)
+  	local global_conf = read_conf_file(M.global_conf_file)
+  	conf_dict.hash = generate_hash(conf_dict)
+  	local found = false
+  	for i, entry in ipairs(global_conf) do
+  		local entry_hash = generate_hash(entry)
+  		if entry_hash == conf_dict.hash then
+  			table.remove(global_conf, i)
+  			break
+  		end
+  	end
+    if conf_dict.remote_host == "unknown" then
+      return
+    end
+  	table.insert(global_conf, conf_dict)
+  	local global_file = io.open(M.global_conf_file, "w")
+  	if global_file then
+  		global_file:write(vim.json.encode(global_conf))
+  		global_file:close()
+  	end
+end
+
 
 -- Create configuration file
 function M.create_project_conf(conf_dict)
@@ -136,23 +138,6 @@ function M.create_project_conf(conf_dict)
 	end
 	file:write(table.concat(lines, "\n"))
 	file:close()
-	local global_conf = read_conf_file(M.global_conf_file)
-	local curr_entry = parse_arsync_config(table.concat(lines, "\n"))
-	curr_entry.hash = generate_hash(curr_entry)
-	local found = false
-	for i, entry in ipairs(global_conf) do
-		local entry_hash = generate_hash(entry)
-		if entry_hash == curr_entry.hash then
-			table.remove(global_conf, i)
-			break
-		end
-	end
-	table.insert(global_conf, curr_entry)
-	local global_file = io.open(M.global_conf_file, "w")
-	if global_file then
-		global_file:write(vim.json.encode(global_conf))
-		global_file:close()
-	end
 
 	return conf_dict
 end
