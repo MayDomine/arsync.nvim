@@ -95,7 +95,8 @@ local function create_picker(json_data)
 end
 
 local function json_picker()
-	local conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
+	-- local conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
+  local conf_file = conf_manager.global_conf_file
 	local local_path = vim.loop.cwd()
 	local json_data = read_json_file(conf_file)
 	local remote_data = {}

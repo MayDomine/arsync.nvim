@@ -219,6 +219,9 @@ local function arsync(direction, single_file)
 	})
 end
 
+M.get_global_conf_path = function()
+  return conf.global_conf_file
+end
 M.arsync = arsync
 M.cleanup = cleanup
 M.arsync_up = function()
@@ -290,7 +293,7 @@ M.setup = function()
 	end, { nargs = 0 })
 
 	vim.api.nvim_create_user_command("ARClear", function(opts)
-		local conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
+    local conf_file = conf.global_conf_file
 		os.remove(conf_file)
 		vim.notify("Delete global configuration:\n" .. conf_file, vim.log.levels.INFO, { title = NOTIFY_ID })
 	end, { nargs = 0 })
