@@ -165,7 +165,7 @@ local function arsync(direction, single_file)
 	end
 
 	local backend_info = get_backend_info(config)
-  local msg_direction = direction == "down" and "Downloading" or "Uploading"
+	local msg_direction = direction == "down" and "Downloading" or "Uploading"
 	start_animation(string.format("[%s] %s...", backend_info, msg_direction))
 	local cmd = backend.transfer(direction, config, file_path)
 
@@ -205,7 +205,7 @@ local function arsync(direction, single_file)
 		end,
 		on_exit = function(_, code)
 			stop_animation()
-      local msg_direction = direction == "down" and "Download" or "Upload"
+			local msg_direction = direction == "down" and "Download" or "Upload"
 			local msg = code == 0 and string.format("[%s] %s completed successfully", backend_info, msg_direction)
 				or string.format("[%s] %s failed with code: %d", backend_info, msg_direction, code)
 
@@ -220,7 +220,7 @@ local function arsync(direction, single_file)
 end
 
 M.get_global_conf_path = function()
-  return conf.global_conf_file
+	return conf.global_conf_file
 end
 M.arsync = arsync
 M.cleanup = cleanup
@@ -293,7 +293,7 @@ M.setup = function()
 	end, { nargs = 0 })
 
 	vim.api.nvim_create_user_command("ARClear", function(opts)
-    local conf_file = conf.global_conf_file
+		local conf_file = conf.global_conf_file
 		os.remove(conf_file)
 		vim.notify("Delete global configuration:\n" .. conf_file, vim.log.levels.INFO, { title = NOTIFY_ID })
 	end, { nargs = 0 })
