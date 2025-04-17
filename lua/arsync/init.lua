@@ -275,6 +275,7 @@ M.register_cmp = function()
 						})
 					end
 				end
+				add_path_item(items, item.remote_host, "Host", "host")
 				add_path_item(items, item.local_path, "Local Path", "local")
 				add_path_item(items, item.remote_path, "Remote Path", item.remote_host)
 			end
