@@ -23,6 +23,7 @@ return {
 
   dependencies = {
     "folke/snacks.nvim",
+    "hrsh7th/nvim-cmp" -- [optional] provide `arsync` source for nvim-cmp
   },
   config = function()
     vim.keymap.set("n", "<leader>ar", "<cmd>ARSyncProj<CR>", { desc = "ARSyncUpProj To Remote" })
@@ -34,6 +35,8 @@ return {
 }
 
 ```
+> **Note**: Now you can enable `arsync` source for nvim-cmp, it would provide completions for all `local_path` and `global_path` from your global conf file, which is quite useful. Hope you would enjoy this ❤️.
+
 
 ## Configuration
 
