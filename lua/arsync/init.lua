@@ -233,8 +233,58 @@ end
 M.arsync_up_delete = function()
 	arsync("upDelete")
 end
+M.register_cmp = function()
+	local ori_cmp = pcall(require, "cmp") and require("cmp") or nil
+	if ori_cmp == nil then
+		return
+	end
+	ori_cmp.register_source("arsync", {
+		complete = function(self, params, callback)
+			local items = {}
 
+			-- 读取 JSON 文件
+			local json_file_path = require("arsync").get_global_conf_path()
+			local file = io.open(json_file_path, "r")
+			if not file then
+				callback({ items = items, isIncomplete = false })
+				return
+			end
+
+			local content = file:read("*all")
+			file:close()
+
+			-- 解析 JSON 数据
+			local success, json_data = pcall(vim.fn.json_decode, content)
+			if not success or type(json_data) ~= "table" then
+				callback({ items = items, isIncomplete = false })
+				return
+			end
+
+			-- 处理每个 JSON 项
+			for _, item in ipairs(json_data) do
+				local function add_path_item(items, path, description, tag)
+					if path then
+						table.insert(items, {
+							label = vim.fn.fnamemodify(path, ":t") .. " [" .. tag .. "]",
+							detail = path,
+							documentation = {
+								kind = "markdown",
+								value = string.format("**%s from Arsync**: %s\n\n", description, path),
+							},
+							insertText = path,
+						})
+					end
+				end
+				add_path_item(items, item.local_path, "Local Path", "local")
+				add_path_item(items, item.remote_path, "Remote Path", item.remote_host)
+			end
+
+			callback({ items = items, isIncomplete = false })
+		end,
+	})
+end
 M.setup = function()
+	M.register_cmp()
 	local search_conf = require("arsync.tele").json_picker
 
 	vim.api.nvim_set_keymap(
