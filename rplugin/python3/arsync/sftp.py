@@ -8,6 +8,8 @@ NOTIFY_ID = "arsync"
 def nvim_notify(
     nvim, message, level="info", title="arsync", id=NOTIFY_ID, stop_ani=False
 ):
+    if nvim is None:
+        return
     if stop_ani:
         nvim.async_call(
             lambda: nvim.command(
@@ -53,7 +55,7 @@ class SFTPClient:
             # 连接到远程主机
             self._connection = Connection(**connect_params)
 
-            nvim_notify(self.nvim, "SFTP connection created", "info", id = None)
+            nvim_notify(self.nvim, "SFTP connection created", "info", id=None)
             return True
         except Exception as e:
             error_message = str(e).replace("'", "\\'")

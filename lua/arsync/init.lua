@@ -14,6 +14,7 @@ local current_notify = nil
 local backends = {
 	rsync = require("arsync.backend.rsync"),
 	sftp = require("arsync.backend.sftp"),
+	scp = require("arsync.backend.scp"),
 }
 
 local FRAMES = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
@@ -261,11 +262,12 @@ M.register_cmp = function()
 			end
 
 			-- 处理每个 JSON 项
+      local comp_item = {}
 			for _, item in ipairs(json_data) do
 				local function add_path_item(items, path, description, tag)
-					if path then
+					if path and not vim.tbl_contains(comp_item, path .. tag) then
 						table.insert(items, {
-							label = vim.fn.fnamemodify(path, ":t") .. " [" .. tag .. "]",
+							label = path .. " [" .. tag .. "]",
 							detail = path,
 							documentation = {
 								kind = "markdown",
@@ -273,11 +275,12 @@ M.register_cmp = function()
 							},
 							insertText = path,
 						})
+            table.insert(comp_item, path .. tag)
 					end
 				end
-				add_path_item(items, item.remote_host, "Host", "host")
-				add_path_item(items, item.local_path, "Local Path", "local")
-				add_path_item(items, item.remote_path, "Remote Path", item.remote_host)
+				add_path_item(items, item.remote_host, "Host", item.remote_host .. ":host")
+				add_path_item(items, item.local_path, "Local Path", item.remote_host .. ":local")
+				add_path_item(items, item.remote_path, "Remote Path",item.remote_host .. ":remote")
 			end
 
 			callback({ items = items, isIncomplete = false })
