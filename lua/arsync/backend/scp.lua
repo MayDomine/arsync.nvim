@@ -22,7 +22,8 @@ function M.transfer(direction, config, rel_path)
 
 	-- Check if it's a directory
 	local is_dir = vim.fn.isdirectory(local_path) == 1
-	local cmd = { "scp" }
+  local socket_path = vim.fn.stdpath("data") .. "/arsync/scp_socket_" .. config.remote_host
+	local cmd = { "scp -vvv -o \"ControlPath=scp_socket\"" }
 	if is_dir then
 		-- Use SCP's -r option to transfer directories
 		table.insert(cmd, "-r")
