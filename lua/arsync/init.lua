@@ -262,7 +262,7 @@ M.register_cmp = function()
 			end
 
 			-- 处理每个 JSON 项
-      local comp_item = {}
+			local comp_item = {}
 			for _, item in ipairs(json_data) do
 				local function add_path_item(items, path, description, tag)
 					if path and not vim.tbl_contains(comp_item, path .. tag) then
@@ -275,18 +275,48 @@ M.register_cmp = function()
 							},
 							insertText = path,
 						})
-            table.insert(comp_item, path .. tag)
+						table.insert(comp_item, path .. tag)
 					end
 				end
 				add_path_item(items, item.remote_host, "Host", item.remote_host .. ":host")
 				add_path_item(items, item.local_path, "Local Path", item.remote_host .. ":local")
-				add_path_item(items, item.remote_path, "Remote Path",item.remote_host .. ":remote")
+				add_path_item(items, item.remote_path, "Remote Path", item.remote_host .. ":remote")
 			end
 
 			callback({ items = items, isIncomplete = false })
 		end,
 	})
 end
+
+M.create_conf_file = function(opts)
+	local local_conf_path = vim.loop.cwd() .. "/.arsync"
+	if not vim.loop.fs_stat(local_conf_path) then
+		local conf_dict = conf.create_project_conf({
+			remote_host = "unknown",
+			remote_port = 0,
+			auto_sync_up = 0,
+			remote_path = "unknown",
+			rsync_flags = { "--max-size=100m" },
+			backend = "rsync",
+			transmit_deltas = false,
+		})
+		vim.notify("Create local configuration\n", vim.log.levels.INFO, { title = NOTIFY_ID })
+	end
+end
+
+M.edit_conf = function(opts)
+	local local_conf_path_arsync = vim.loop.cwd() .. "/.arsync"
+	local local_conf_path_vimarsync = vim.loop.cwd() .. "/.vim-arsync"
+
+	if vim.fn.filereadable(local_conf_path_arsync) == 1 then
+		vim.cmd("edit " .. local_conf_path_arsync)
+	elseif vim.fn.filereadable(local_conf_path_vimarsync) == 1 then
+		vim.cmd("edit " .. local_conf_path_vimarsync)
+	else
+		M.create_conf_file()
+	end
+end
+
 M.setup = function()
 	M.register_cmp()
 	local search_conf = require("arsync.tele").json_picker
@@ -357,21 +387,8 @@ M.setup = function()
 	-- vim.keymap.set("n", "<leader>as", "<cmd>ARSyncShow<CR>", { desc = "ARSyncShow" })
 	-- vim.keymap.set("n", "<leader>ad", "<cmd>ARSyncDownProj<CR>", { desc = "ARSyncDownProj From Remote" })
 	-- vim.keymap.set("n", "<leader>ac", "<cmd>ARCreate<CR>", { desc = "ARSyncUp Config Create" })
-	vim.api.nvim_create_user_command("ARCreate", function(opts)
-		local local_conf_path = vim.loop.cwd() .. "/.arsync"
-		if not vim.loop.fs_stat(local_conf_path) then
-			local conf_dict = conf.create_project_conf({
-				remote_host = "unknown",
-				remote_port = 0,
-				auto_sync_up = 0,
-				remote_path = "unknown",
-				rsync_flags = { "--max-size=100m" },
-				backend = "rsync",
-				transmit_deltas = false,
-			})
-			vim.notify("Create local configuration\n", vim.log.levels.INFO, { title = NOTIFY_ID })
-		end
-	end, { nargs = 0 })
+	vim.api.nvim_create_user_command("ARCreate", M.create_conf_file, { nargs = 0 })
+	vim.api.nvim_create_user_command("AREdit", M.edit_conf, { nargs = 0 })
 end
 
 return M
