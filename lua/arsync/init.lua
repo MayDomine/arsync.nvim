@@ -236,10 +236,8 @@ M.arsync_up_delete = function()
 end
 M.register_cmp = function(cmp)
   if cmp == "blink" then
-    vim.g.arsync_blink_cmp_enabled = true
     require('arsync.cmp.blink-cmp').register_cmp()
   elseif cmp == "nvim-cmp" then
-    vim.g.arsync_nvim_cmp_enabled = true
     require('arsync.cmp.nvim-cmp').register_cmp()
   else
     vim.notify("Set arsync.opts.completion_plugin to 'nvim-cmp' or 'blink'", vim.log.levels.WARN, { title = NOTIFY_ID })
@@ -335,6 +333,10 @@ M.setup = function(opts)
 
 	vim.api.nvim_create_user_command("ARSyncCleanSftp", function(opts)
 		M.cleanup()
+	end, { nargs = 0 })
+
+	vim.api.nvim_create_user_command("ARSyncCMP", function(opts)
+    vim.g.arsync_cmp_enabled = not vim.g.arsync_cmp_enabled
 	end, { nargs = 0 })
 
 	vim.api.nvim_create_user_command("ARClear", function(opts)

@@ -16,6 +16,7 @@ end
 
 ---@return string[]
 
+function Source:get_trigger_characters() return { '/' } end
 ---@param context blink.cmp.Context
 ---@param callback fun(response?: blink.cmp.CompletionResponse)
 function Source:get_completions(context, callback)
