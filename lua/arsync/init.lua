@@ -234,58 +234,16 @@ end
 M.arsync_up_delete = function()
 	arsync("upDelete")
 end
-M.register_cmp = function()
-	local ori_cmp = pcall(require, "cmp") and require("cmp") or nil
-	if ori_cmp == nil then
-		return
-	end
-	ori_cmp.register_source("arsync", {
-		complete = function(self, params, callback)
-			local items = {}
-
-			-- 读取 JSON 文件
-			local json_file_path = require("arsync").get_global_conf_path()
-			local file = io.open(json_file_path, "r")
-			if not file then
-				callback({ items = items, isIncomplete = false })
-				return
-			end
-
-			local content = file:read("*all")
-			file:close()
-
-			-- 解析 JSON 数据
-			local success, json_data = pcall(vim.fn.json_decode, content)
-			if not success or type(json_data) ~= "table" then
-				callback({ items = items, isIncomplete = false })
-				return
-			end
-
-			-- 处理每个 JSON 项
-			local comp_item = {}
-			for _, item in ipairs(json_data) do
-				local function add_path_item(items, path, description, tag)
-					if path and not vim.tbl_contains(comp_item, path .. tag) then
-						table.insert(items, {
-							label = path .. " [" .. tag .. "]",
-							detail = path,
-							documentation = {
-								kind = "markdown",
-								value = string.format("**%s from Arsync**: %s\n\n", description, path),
-							},
-							insertText = path,
-						})
-						table.insert(comp_item, path .. tag)
-					end
-				end
-				add_path_item(items, item.remote_host, "Host", item.remote_host .. ":host")
-				add_path_item(items, item.local_path, "Local Path", item.remote_host .. ":local")
-				add_path_item(items, item.remote_path, "Remote Path", item.remote_host .. ":remote")
-			end
-
-			callback({ items = items, isIncomplete = false })
-		end,
-	})
+M.register_cmp = function(cmp)
+  if cmp == "blink" then
+    vim.g.arsync_blink_cmp_enabled = true
+    require('arsync.cmp.blink-cmp').register_cmp()
+  elseif cmp == "nvim-cmp" then
+    vim.g.arsync_nvim_cmp_enabled = true
+    require('arsync.cmp.nvim-cmp').register_cmp()
+  else
+    vim.notify("Set arsync.opts.completion_plugin to 'nvim-cmp' or 'blink'", vim.log.levels.WARN, { title = NOTIFY_ID })
+  end
 end
 
 M.create_conf_file = function(opts)
@@ -317,8 +275,11 @@ M.edit_conf = function(opts)
 	end
 end
 
-M.setup = function()
-	M.register_cmp()
+M.setup = function(opts)
+  opts = opts or {
+    completion_plugin = "nvim-cmp"
+  }
+	M.register_cmp(opts.completion_plugin)
 	local search_conf = require("arsync.tele").json_picker
 
 	vim.api.nvim_set_keymap(
