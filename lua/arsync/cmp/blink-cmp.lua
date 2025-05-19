@@ -11,7 +11,7 @@ end
 
 ---@return boolean
 function Source:enabled()
-	return vim.g.arsync_blink_cmp_enabled
+	return vim.g.arsync_cmp_enabled or vim.bo.filetype == "arsync"
 end
 
 ---@return string[]

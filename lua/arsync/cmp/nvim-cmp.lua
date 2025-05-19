@@ -5,6 +5,7 @@ M.register_cmp = function()
 		return
 	end
 	ori_cmp.register_source("arsync", {
+		enabled = vim.g.arsync_cmp_enabled,
 		complete = function(self, params, callback)
 			local items = {}
 

@@ -280,14 +280,15 @@ M.setup = function(opts)
 	M.register_cmp(opts.completion_plugin)
 	local search_conf = require("arsync.tele").json_picker
 
-	vim.api.nvim_set_keymap(
-		"n",
-		"<leader>jp",
-		'<cmd>lua require("arsync").search_conf()<CR>',
-		{ noremap = true, silent = true }
-	)
 
 	M.search_conf = search_conf
+
+  vim.api.nvim_create_autocmd("BufRead", {
+    pattern={".arsync", ".vim-arsync"},
+    callback = function()
+      vim.api.nvim_set_option_value("filetype", "arsync", { buf = vim.api.nvim_get_current_buf() })
+    end,
+  })
 
 	vim.api.nvim_create_autocmd({ "BufWritePost", "FileWritePost" }, {
 		callback = function()
