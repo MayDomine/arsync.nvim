@@ -333,6 +333,7 @@ M.setup = function(opts)
 	end, { desc = "Sync current proj from remote" })
 
 	vim.api.nvim_create_user_command("ARSyncCleanSftp", function(opts)
+    vim.notify("Clean sftp connection")
 		M.cleanup()
 	end, { nargs = 0 })
 
