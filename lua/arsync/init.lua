@@ -234,6 +234,15 @@ end
 M.arsync_up_delete = function()
 	arsync("upDelete")
 end
+
+M.copy_remote_path = function()
+  local config = conf.load_conf()
+  local remote_home = config.remote_path 
+  local rel_path_curr_file = vim.fn.expand("%:.")
+  local remote_path_curr_file = vim.fn.join({remote_home, rel_path_curr_file}, "/")
+  vim.fn.setreg("+", remote_path_curr_file)
+end
+
 M.register_cmp = function(cmp)
   if cmp == "blink" then
     require('arsync.cmp.blink-cmp').register_cmp()
@@ -339,6 +348,10 @@ M.setup = function(opts)
 
 	vim.api.nvim_create_user_command("ARSyncCMP", function(opts)
     vim.g.arsync_cmp_enabled = not vim.g.arsync_cmp_enabled
+	end, { nargs = 0 })
+
+	vim.api.nvim_create_user_command("ARCopyRemotePath", function(opts)
+    M.copy_remote_path()
 	end, { nargs = 0 })
 
 	vim.api.nvim_create_user_command("ARClear", function(opts)
