@@ -127,7 +127,7 @@ local function get_backend_info(config)
 end
 
 local function cleanup()
-	local config = conf.load_conf()
+	local config = M.load_conf()
 	if not config then
 		return
 	end
@@ -138,16 +138,7 @@ end
 
 local function arsync(direction, single_file)
 	single_file = single_file == nil and true or single_file
-	local config = conf.load_conf()
-	if not config then
-		vim.notify("Could not locate a .arsync configuration file", "error", {
-			title = NOTIFY_TITLE,
-			id = NOTIFY_ID,
-			replace = current_notify,
-		})
-		return
-	end
-
+	local config = M.load_conf()
 	if vim.g.arsync_disable then
 		return
 	end
@@ -235,8 +226,21 @@ M.arsync_up_delete = function()
 	arsync("upDelete")
 end
 
+M.load_conf = function ()
+  local conf = conf.load_conf()
+  if not conf then
+		vim.notify("Could not locate a .arsync configuration file", "info", {
+			title = NOTIFY_TITLE,
+			id = NOTIFY_ID,
+			replace = current_notify,
+		})
+		return
+	end
+  return conf
+end
+
 M.copy_remote_path = function()
-  local config = conf.load_conf()
+  local config = M.load_conf()
   local remote_home = config.remote_path 
   local rel_path_curr_file = vim.fn.expand("%:.")
   local remote_path_curr_file = vim.fn.join({remote_home, rel_path_curr_file}, "/")
@@ -312,7 +316,7 @@ M.setup = function(opts)
 	})
 
 	vim.api.nvim_create_user_command("ARSyncShow", function(opts)
-		local config = conf.load_conf()
+		local config = M.load_conf()
 		vim.notify(vim.inspect(config), vim.log.levels.INFO, { title = NOTIFY_TITLE })
 	end, { desc = "Show current configuration" })
 

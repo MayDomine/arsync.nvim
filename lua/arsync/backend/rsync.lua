@@ -25,6 +25,8 @@ function M.transfer(direction, conf, rel_filepath)
 	end
 	if conf.remote_or_local == "remote" then
 		local ssh_cmd = conf.remote_port ~= 0 and ("ssh -p " .. conf.remote_port) or "ssh"
+    local socket_path = vim.fn.stdpath("data") .. "/arsync/arsync_socket_" .. conf.remote_host
+    ssh_cmd = ssh_cmd .. " -o ControlMaster=auto -o ControlPath=" .. socket_path .. " -o ControlPersist=10m"
 		local remote_prefix = conf.remote_host
 		if conf.remote_user then
 			remote_prefix = conf.remote_user .. "@" .. remote_prefix

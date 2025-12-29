@@ -22,7 +22,7 @@ function M.transfer(direction, config, rel_path)
 
 	-- Check if it's a directory
 	local is_dir = vim.fn.isdirectory(local_path) == 1
-	local socket_path = vim.fn.stdpath("data") .. "/arsync/scp_socket_" .. config.remote_host
+	local socket_path = vim.fn.stdpath("data") .. "/arsync/arsync_socket_" .. config.remote_host
 	local cmd = {
 		"scp",
 		"-o",
