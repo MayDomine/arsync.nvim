@@ -2,7 +2,19 @@
 local M = {}
 
 M.global_conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
-M.replace_key = { "remote_host", "remote_port", "remote_path", "local_path", "ignore_path", "backend", "auto_sync_up" }
+M.replace_key = { 
+  "remote_host",
+  "remote_port",
+  "remote_path",
+  "local_path",
+  "ignore_path",
+  "backend",
+  "auto_sync_up",
+  "rsync_flags",
+  "tmux_cmd",
+  "entrypoint",
+  "session_name"
+}
 M.init_key = { "remote_host", "remote_port", "remote_path", "local_path", "rsync_flags", "auto_sync_up" }
 
 if not vim.loop.fs_stat(vim.fn.fnamemodify(M.global_conf_file, ":h")) then
@@ -125,6 +137,9 @@ function M.create_project_conf(conf_dict)
 	local option_lines = {
 		{ "ignore_path %s", conf_dict.ignore_path or nil },
 		{ "backend %s", conf_dict.backend or nil },
+		{ "tmux_cmd %s", conf_dict.tmux_cmd or nil },
+		{ "entrypoint %s", conf_dict.entrypoint or nil },
+		{ "session_name %s", conf_dict.session_name or nil },
 	}
 	for _, l in ipairs(option_lines) do
 		if l[2] then
