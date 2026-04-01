@@ -112,12 +112,23 @@ local function validate_config(conf)
 	return conf
 end
 
+local function truncate_host(host, max_len)
+	max_len = max_len or 20
+	if #host <= max_len then
+		return host
+	end
+	local head_len = math.ceil((max_len - 3) / 2)
+	local tail_len = max_len - 3 - head_len
+	return host:sub(1, head_len) .. "..." .. host:sub(-tail_len)
+end
+
 local function get_backend_info(config)
 	local backend_type = config.backend or "rsync"
 	local info = backend_type .. ":"
 	if backend_type == "rsync" then
-		local remote_prefix = config.remote_user and (config.remote_user .. "@" .. config.remote_host)
-			or config.remote_host
+		local short_host = truncate_host(config.remote_host)
+		local remote_prefix = config.remote_user and (config.remote_user .. "@" .. short_host)
+			or short_host
 		info = info .. remote_prefix
 		if config.remote_port and config.remote_port ~= 0 then
 			info = info .. ":" .. config.remote_port
