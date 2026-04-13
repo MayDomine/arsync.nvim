@@ -18,7 +18,7 @@ You can install `arsync.nvim` using your favorite plugin manager. For example, w
 ```lua
 return {
   "https://github.com/MayDomine/arsync.nvim.git",
-  build = ":UpdateRemotePlugins",
+  build = "build.lua",
   event = "BufWritePost",
 
   dependencies = {
