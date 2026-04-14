@@ -4,6 +4,7 @@ local M = {}
 M.global_conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
 M.replace_key = { 
   "remote_host",
+  "remote_execute_host",
   "remote_port",
   "remote_path",
   "local_path",
@@ -70,6 +71,37 @@ local function parse_arsync_config(content)
 	return config
 end
 
+local function normalize_conf(conf)
+	if not conf then
+		return nil
+	end
+	if conf.local_path then
+		conf.local_path = conf.local_path:gsub("/+$", "")
+	end
+	if conf.remote_path then
+		conf.remote_path = conf.remote_path:gsub("/+$", "")
+	end
+	if conf.remote_execute_host == nil or conf.remote_execute_host == "" then
+		conf.remote_execute_host = conf.remote_host
+	end
+	return conf
+end
+
+local function read_project_conf(local_path)
+	local root = local_path or vim.loop.cwd()
+	local local_conf_path_arsync = root .. "/.arsync"
+	local local_conf_path_vimarsync = root .. "/.vim-arsync"
+	local file = io.open(local_conf_path_arsync, "r") or io.open(local_conf_path_vimarsync, "r")
+	if not file then
+		return nil
+	end
+
+	local content = file:read("*a")
+	file:close()
+
+	return normalize_conf(parse_arsync_config(content))
+end
+
 -- Add this function definition
 local function generate_hash(entry)
 	-- Concatenate relevant fields to form a unique string
@@ -80,17 +112,10 @@ end
 
 -- Load .arsync configuration
 function M.load_conf()
-	local local_conf_path_arsync = vim.loop.cwd() .. "/.arsync"
-	local local_conf_path_vimarsync = vim.loop.cwd() .. "/.vim-arsync"
-	local file = io.open(local_conf_path_arsync, "r") or io.open(local_conf_path_vimarsync, "r")
-	if not file then
+	local local_conf = read_project_conf(vim.loop.cwd())
+	if not local_conf then
 		return nil
 	end
-
-	local content = file:read("*a")
-	file:close()
-
-	local local_conf = parse_arsync_config(content)
   M.write_global_conf(local_conf)
 	return local_conf
 end
@@ -120,6 +145,7 @@ end
 
 -- Create configuration file
 function M.create_project_conf(conf_dict)
+	conf_dict = normalize_conf(conf_dict or {}) or {}
 	local local_path = conf_dict["local_path"] or vim.loop.cwd()
 	local project_conf_path = local_path .. "/.arsync"
 
@@ -137,6 +163,12 @@ function M.create_project_conf(conf_dict)
 	local option_lines = {
 		{ "ignore_path %s", conf_dict.ignore_path or nil },
 		{ "backend %s", conf_dict.backend or nil },
+		{
+			"remote_execute_host %s",
+			(conf_dict.remote_execute_host and conf_dict.remote_execute_host ~= conf_dict.remote_host)
+				and conf_dict.remote_execute_host
+				or nil,
+		},
 		{ "tmux_cmd %s", conf_dict.tmux_cmd or nil },
 		{ "entrypoint %s", conf_dict.entrypoint or nil },
 		{ "session_name %s", conf_dict.session_name or nil },
@@ -154,23 +186,33 @@ function M.create_project_conf(conf_dict)
 	file:write(table.concat(lines, "\n"))
 	file:close()
 
-	return conf_dict
+	return normalize_conf(conf_dict)
 end
 
 -- Update project configuration
 function M.update_project_conf(conf_dict)
 	local local_path = conf_dict["local_path"] or vim.loop.cwd()
-	local project_conf_path = local_path .. "/.arsync"
-	local current_conf = {}
+	local current_conf = read_project_conf(local_path) or { local_path = local_path }
 
 	for _, k in ipairs(M.replace_key) do
 		if conf_dict[k] ~= nil then
 			current_conf[k] = conf_dict[k]
 		end
 	end
+	current_conf.local_path = current_conf.local_path or local_path
+	current_conf = normalize_conf(current_conf)
 	M.create_project_conf(current_conf)
 	vim.cmd([[e!]])
 	return current_conf
+end
+
+function M.get_remote_execute_host(conf_dict)
+	local conf = normalize_conf(conf_dict)
+	return conf and conf.remote_execute_host or nil
+end
+
+function M.normalize_conf(conf_dict)
+	return normalize_conf(conf_dict)
 end
 
 -- Delete project configuration
