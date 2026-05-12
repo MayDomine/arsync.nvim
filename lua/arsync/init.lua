@@ -147,6 +147,17 @@ local function cleanup()
 	backend.cleanup()
 end
 
+-- Fire a User autocmd so users can hook into sync lifecycle events.
+-- Pattern is one of: ARSyncStart, ARSyncComplete, ARSyncFailed.
+-- `data` is exposed via the autocmd `data` field (Neovim 0.8+).
+local function emit_event(pattern, data)
+	pcall(vim.api.nvim_exec_autocmds, "User", {
+		pattern = pattern,
+		modeline = false,
+		data = data,
+	})
+end
+
 local function arsync(direction, single_file)
 	single_file = single_file == nil and true or single_file
 	local config = M.load_conf()
@@ -186,6 +197,21 @@ local function arsync(direction, single_file)
 		return
 	end
 
+	local event_data = {
+		direction = direction,
+		single_file = single_file,
+		file_path = file_path,
+		local_path = config.local_path,
+		remote_path = config.remote_path,
+		remote_host = config.remote_host,
+		remote_user = config.remote_user,
+		remote_port = config.remote_port,
+		backend = config.backend,
+		backend_info = backend_info,
+		cmd = cmd,
+	}
+	emit_event("ARSyncStart", event_data)
+
 	vim.g.rsync_cmd = cmd
 	vim.fn.jobstart(cmd, {
 		on_stdout = function(_, data)
@@ -218,6 +244,9 @@ local function arsync(direction, single_file)
 				replace = current_notify,
 				animate = true,
 			})
+
+			local exit_data = vim.tbl_extend("force", event_data, { exit_code = code })
+			emit_event(code == 0 and "ARSyncComplete" or "ARSyncFailed", exit_data)
 		end,
 	})
 end

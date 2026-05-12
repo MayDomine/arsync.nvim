@@ -91,6 +91,56 @@ rsync_flags ["--max-size=100m"]
 - **`<leader>ad`**: Sync the entire project from the remote server.
 - **`<leader>ac`**: Create a new `.arsync` configuration file.
 
+### Events / Hooks
+
+`arsync.nvim` fires `User` autocmd events at key points of an upload/download so you can plug in your own logic (logging, post-sync builds, custom notifications, etc.).
+
+| Pattern           | When it fires                                            |
+| ----------------- | -------------------------------------------------------- |
+| `ARSyncStart`     | Right before the transfer command is launched            |
+| `ARSyncComplete`  | After the transfer exits with code `0`                   |
+| `ARSyncFailed`    | After the transfer exits with a non-zero code            |
+
+Each event carries a payload on `args.data` describing the sync:
+
+```lua
+{
+  direction    = "up" | "down" | "upDelete",
+  single_file  = true | false,
+  file_path    = "relative/path.txt",  -- "" for whole-project syncs
+  local_path   = "/abs/local/path",
+  remote_path  = "/abs/remote/path",
+  remote_host  = "host.example.com",
+  remote_user  = "user",                -- may be nil
+  remote_port  = 22,
+  backend      = "rsync" | "sftp" | "scp",
+  backend_info = "rsync:user@host:22",
+  cmd          = { "rsync", ... },     -- the command being executed
+  exit_code    = 0,                     -- only on Complete/Failed
+}
+```
+
+Example: run a remote build script after every successful upload.
+
+```lua
+vim.api.nvim_create_autocmd("User", {
+  pattern = "ARSyncComplete",
+  callback = function(args)
+    local d = args.data
+    if d.direction == "up" then
+      vim.notify(("Synced %s -> %s"):format(d.file_path ~= "" and d.file_path or d.local_path, d.backend_info))
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "ARSyncFailed",
+  callback = function(args)
+    vim.notify("arsync failed: exit " .. tostring(args.data.exit_code), vim.log.levels.ERROR)
+  end,
+})
+```
+
 ## Example Workflow
 
 1. **Create a `.arsync` Configuration File**:
