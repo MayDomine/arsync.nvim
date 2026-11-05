@@ -1,13 +1,22 @@
-M = {}
+local common = require("arsync.cmp.common")
+
+local M = {}
 M.register_cmp = function()
 	local ori_cmp = pcall(require, "cmp") and require("cmp") or nil
 	if ori_cmp == nil then
 		return
 	end
 	ori_cmp.register_source("arsync", {
-		enabled = vim.g.arsync_cmp_enabled,
+		enabled = function()
+			return vim.g.arsync_cmp_enabled ~= false or common.is_conf_buffer()
+		end,
 		complete = function(self, params, callback)
 			local items = {}
+
+			-- In a `.arsync` file, complete the configuration keys themselves.
+			if common.is_conf_buffer() then
+				vim.list_extend(items, common.key_items())
+			end
 
 			-- 读取 JSON 文件
 			local json_file_path = require("arsync").get_global_conf_path()

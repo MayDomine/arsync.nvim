@@ -24,6 +24,29 @@ local DEFAULT_WRITE_ORDER = {
 	"session_name",
 }
 
+-- Descriptions for every key accepted in a `.arsync` file. They feed cmp
+-- completion; keep the list in sync with the keys handled by this module.
+local CONF_KEY_DESCRIPTIONS = {
+	auto_sync_up = "Automatically upload the project on save (1 enabled, 0 disabled)",
+	local_options = "rsync options applied on the local side (default: -var)",
+	local_path = "Local project path",
+	remote_host = "Remote host name or SSH alias",
+	remote_user = "SSH username for the remote host",
+	remote_options = "rsync options applied on the remote side (default: -var)",
+	remote_or_local = 'Which side paths are relative to: "remote" or "local"',
+	remote_path = "Remote project path",
+	remote_port = "SSH port for the remote host (default: 0/22)",
+	rsync_flags = "Extra rsync flags as a JSON array, e.g. [\"--max-size=100m\"]",
+	ignore_path = 'Paths to exclude, written as a bracketed list, e.g. [".git","dist"]',
+	backend = "Transfer backend: rsync, sftp or scp",
+	remote_execute_host = "Host used to run remote commands (defaults to remote_host)",
+	tmux_cmd = "tmux command used for long-lived remote sessions",
+	entrypoint = "Command sourced on the remote host before running commands",
+	session_name = "tmux session name (defaults to basename of local_path)",
+	transmit_deltas = "Whether to transmit only file deltas (default: false)",
+}
+local EXTRA_CONF_KEYS = { "transmit_deltas" }
+
 M.global_conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
 M.replace_key = {
 	"remote_host",
@@ -291,6 +314,33 @@ end
 local function generate_hash(entry)
 	local unique_string = entry.remote_host .. entry.remote_path
 	return vim.fn.sha256(unique_string)
+end
+
+---All user-facing keys accepted in a `.arsync` file, in write order.
+---@return { key: string, description: string }[]
+function M.get_conf_keys()
+	local result = {}
+	local seen = {}
+
+	local function push(key)
+		key = canonicalize_key(key)
+		if not seen[key] then
+			seen[key] = true
+			table.insert(result, {
+				key = key,
+				description = CONF_KEY_DESCRIPTIONS[key] or "Arsync configuration key",
+			})
+		end
+	end
+
+	for _, key in ipairs(DEFAULT_WRITE_ORDER) do
+		push(key)
+	end
+	for _, key in ipairs(EXTRA_CONF_KEYS) do
+		push(key)
+	end
+
+	return result
 end
 
 function M.load_conf()

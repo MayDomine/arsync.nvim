@@ -1,5 +1,7 @@
 ---@module 'blink.cmp'
 
+local common = require("arsync.cmp.common")
+
 ---@class render.md.blink.Source: blink.cmp.Source
 local Source = {}
 Source.__index = Source
@@ -21,6 +23,12 @@ function Source:get_trigger_characters() return { '/' } end
 ---@param callback fun(response?: blink.cmp.CompletionResponse)
 function Source:get_completions(context, callback)
 	local items = {}
+
+	-- In a `.arsync` file, complete the configuration keys themselves.
+	if common.is_conf_buffer() then
+		vim.list_extend(items, common.key_items())
+	end
+
 	-- 读取 JSON 文件
 	local json_file_path = require("arsync").get_global_conf_path()
 	local file = io.open(json_file_path, "r")
