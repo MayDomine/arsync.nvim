@@ -47,6 +47,12 @@ local CONF_KEY_DESCRIPTIONS = {
 }
 local EXTRA_CONF_KEYS = { "transmit_deltas" }
 
+-- Keys declared by the user through `setup({ extra_keys = ... })`. The plugin
+-- never reads them; it only keeps them in `.arsync` files so user config can
+-- read `load_conf()` and build custom behavior, e.g. a remote `venv_path`.
+local registered_extra_keys = {}
+local registered_extra_key_specs = {}
+
 M.global_conf_file = vim.fn.stdpath("data") .. "/arsync/global_conf.json"
 M.replace_key = {
 	"remote_host",
@@ -70,6 +76,90 @@ end
 
 local function is_meta_key(key)
 	return key == "hash" or key == KEY_ORDER_META
+end
+
+local function is_builtin_key(key)
+	key = canonicalize_key(key)
+	if is_meta_key(key) then
+		return true
+	end
+	for _, builtin in ipairs(DEFAULT_WRITE_ORDER) do
+		if canonicalize_key(builtin) == key then
+			return true
+		end
+	end
+	for _, builtin in ipairs(EXTRA_CONF_KEYS) do
+		if builtin == key then
+			return true
+		end
+	end
+	return false
+end
+
+local function normalize_extra_key_spec(name, spec)
+	if type(name) ~= "string" or name == "" then
+		return nil
+	end
+	if type(spec) ~= "table" then
+		spec = {}
+	end
+	return {
+		key = name,
+		description = type(spec.description) == "string" and spec.description or "User-defined arsync key",
+		default = spec.default,
+		has_default = spec.default ~= nil,
+	}
+end
+
+---Declare extra keys that should be preserved, completed and documented.
+---Accepts `{ "venv_path" }` or `{ venv_path = { description = "...", default = "..." } }`.
+---@param declarations table|nil
+function M.register_extra_keys(declarations)
+	if type(declarations) ~= "table" then
+		return
+	end
+
+	local entries = {}
+	if declarations[1] ~= nil then
+		for _, name in ipairs(declarations) do
+			table.insert(entries, normalize_extra_key_spec(name, {}))
+		end
+	else
+		local names = {}
+		for name in pairs(declarations) do
+			table.insert(names, name)
+		end
+		table.sort(names)
+		for _, name in ipairs(names) do
+			table.insert(entries, normalize_extra_key_spec(name, declarations[name]))
+		end
+	end
+
+	for _, entry in ipairs(entries) do
+		if entry and not is_builtin_key(entry.key) then
+			local existing = registered_extra_key_specs[entry.key]
+			if existing then
+				existing.description = entry.description
+				existing.default = entry.default
+				existing.has_default = entry.has_default
+			else
+				table.insert(registered_extra_keys, entry)
+				registered_extra_key_specs[entry.key] = entry
+			end
+		end
+	end
+end
+
+---Defaults declared for extra keys, used when generating a new `.arsync` file.
+---@return table<string, any>
+function M.get_extra_conf_defaults()
+	local defaults = {}
+	for _, entry in ipairs(registered_extra_keys) do
+		if entry.has_default then
+			defaults[entry.key] = vim.deepcopy(entry.default)
+		end
+	end
+	return defaults
 end
 
 local function push_order_key(order, seen, key)
@@ -136,6 +226,30 @@ local function read_conf_file(file_path)
 	return ok and result or {}
 end
 
+-- Registered extra keys are stored as text in `.arsync`; their declared default
+-- type decides how the value is read back.
+local function coerce_extra_value(key, value)
+	local spec = registered_extra_key_specs[key]
+	local default = spec and spec.default
+	if default == nil then
+		return value
+	end
+	if type(default) == "number" then
+		return tonumber(value) or value
+	elseif type(default) == "boolean" then
+		if value == "true" then
+			return true
+		elseif value == "false" then
+			return false
+		end
+		return value
+	elseif type(default) == "table" then
+		local ok, decoded = pcall(vim.json.decode, value)
+		return ok and decoded or value
+	end
+	return value
+end
+
 local function parse_arsync_config(content)
 	local config = {}
 	local order = {}
@@ -152,6 +266,8 @@ local function parse_arsync_config(content)
 				config[key] = tonumber(value)
 			elseif key == "local_path" or key == "remote_path" then
 				config[key] = value:gsub("/+$", "")
+			elseif registered_extra_key_specs[key] then
+				config[key] = coerce_extra_value(key, value)
 			else
 				config[key] = value
 			end
@@ -230,6 +346,12 @@ local function format_conf_line(key, value)
 	end
 	if key == "local_path" or key == "remote_path" then
 		return string.format("%s %s", key, tostring(value):gsub("/+$", ""))
+	end
+	if type(value) == "table" then
+		return string.format("%s %s", key, vim.json.encode(value))
+	end
+	if type(value) == "boolean" then
+		return string.format("%s %s", key, tostring(value))
 	end
 	return string.format("%s %s", key, tostring(value))
 end
@@ -322,13 +444,13 @@ function M.get_conf_keys()
 	local result = {}
 	local seen = {}
 
-	local function push(key)
+	local function push(key, description)
 		key = canonicalize_key(key)
 		if not seen[key] then
 			seen[key] = true
 			table.insert(result, {
 				key = key,
-				description = CONF_KEY_DESCRIPTIONS[key] or "Arsync configuration key",
+				description = description or CONF_KEY_DESCRIPTIONS[key] or "Arsync configuration key",
 			})
 		end
 	end
@@ -338,6 +460,9 @@ function M.get_conf_keys()
 	end
 	for _, key in ipairs(EXTRA_CONF_KEYS) do
 		push(key)
+	end
+	for _, entry in ipairs(registered_extra_keys) do
+		push(entry.key, entry.description)
 	end
 
 	return result

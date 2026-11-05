@@ -68,6 +68,33 @@ rsync_flags ["--max-size=100m"]
 - **`rsync_flags`**: Additional flags to pass to the `rsync` command.
 - **`transmit_deltas`**: Whether to transmit only file deltas (default: false).
 
+### User-defined keys
+
+A `.arsync` file may contain any `key value` line; unknown keys are preserved when the file or the global config is rewritten. Keys that the plugin itself does not consume (`remote_execute_host`, `tmux_cmd`, `entrypoint`, `session_name`) exist so your own config can build behavior on top of them.
+
+You can declare additional keys in `setup()` to get them in cmp completion and, optionally, in the template written by `:ARCreate`:
+
+```lua
+require("arsync").setup {
+  completion_plugin = "blink",
+  extra_keys = {
+    venv_path = {
+      description = "Script sourced on the remote host to enter a virtualenv",
+      default = "/opt/venv/bin/activate",
+    },
+  },
+}
+```
+
+Read the value anywhere in your config:
+
+```lua
+local conf = require("arsync.conf").load_conf()
+local venv = conf and conf.venv_path
+```
+
+`extra_keys = { "venv_path" }` registers keys without a description or default. The declared default type also decides how the value is parsed back: number, boolean and JSON table values round-trip as their Lua types.
+
 ## Usage
 
 ### Commands

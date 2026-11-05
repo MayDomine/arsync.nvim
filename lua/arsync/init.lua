@@ -300,7 +300,7 @@ end
 M.create_conf_file = function(opts)
 	local local_conf_path = vim.loop.cwd() .. "/.arsync"
 	if not vim.loop.fs_stat(local_conf_path) then
-		local conf_dict = conf.create_project_conf({
+		local conf_dict = conf.create_project_conf(vim.tbl_extend("force", {
 			remote_host = "unknown",
 			remote_port = 0,
 			auto_sync_up = 0,
@@ -308,7 +308,7 @@ M.create_conf_file = function(opts)
 			rsync_flags = { "--max-size=100m" },
 			backend = "rsync",
 			transmit_deltas = false,
-		})
+		}, conf.get_extra_conf_defaults()))
 		vim.notify("Create local configuration\n", vim.log.levels.INFO, { title = NOTIFY_ID })
 	end
 end
@@ -330,6 +330,9 @@ M.setup = function(opts)
   opts = opts or {
     completion_plugin = "nvim-cmp"
   }
+	if opts.extra_keys then
+		conf.register_extra_keys(opts.extra_keys)
+	end
 	M.register_cmp(opts.completion_plugin)
 	local search_conf = require("arsync.tele").json_picker
 
